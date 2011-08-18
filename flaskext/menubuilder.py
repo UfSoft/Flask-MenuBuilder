@@ -15,12 +15,17 @@ NEVER = object()
 ANYTIME = object()
 
 class MenuBuilder(object):
-    def __init__(self, app, format='html'):
-        self.app = app
+    def __init__(self, app=None, format='html'):
+        if app is not None:
+            self.init_app(app)
         assert format in ('html', 'xhtml')
         self.format = format
         self.builder = getattr(werkzeug.utils, self.format)
         self.menus = {}
+
+    def init_app(self, app):
+        self.app = app
+        self.app.menubuilder = self
 
     def add_menu(self, menu_id):
         if menu_id in self.menus:
