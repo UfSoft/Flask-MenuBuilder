@@ -7,33 +7,48 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from flask import url_for
+from flask import url_for, request
 from jinja2 import Markup
 import werkzeug.utils
 
 NEVER = object()
 ANYTIME = object()
 
+def request_enpoint_matches_menuitem_endpoint(menu_item):
+    return request.endpoint==menu_item.endpoint
+
+# Simple "alias"
+REQUEST_MATCHES_ENDPOINT = request_enpoint_matches_menuitem_endpoint
+
 class MenuBuilder(object):
+    """
+    This class will be attached to the Flask application and will be available
+    within a template's context as `menubuilder`.
+    """
     def __init__(self, app=None, format='html'):
-        if app is not None:
-            self.init_app(app)
         assert format in ('html', 'xhtml')
         self.format = format
         self.builder = getattr(werkzeug.utils, self.format)
         self.menus = {}
+        self.raise_runtime_errors = False
+        if app is not None:
+            self.init_app(app)
 
     def init_app(self, app):
+        app.menubuilder = self
+        app.context_processor(lambda: dict(menubuilder=self))
         self.app = app
-        self.app.menubuilder = self
 
     def add_menu(self, menu_id):
         if menu_id in self.menus:
-            raise RuntimeError("There's already a menu with the id: %s", menu_id)
+            if self.app.debug:
+                raise RuntimeError("There's already a menu with the id: %s", menu_id)
+            raise RuntimeWarning("There's already a menu with the id: %s", menu_id)
         self.menus[menu_id] = {}
 
     def add_menu_entry(self, menu_id, title, endpoint, priority=0,
-                       activewhen=NEVER, visiblewhen=ANYTIME, classes=None,
+                       activewhen=REQUEST_MATCHES_ENDPOINT,
+                       visiblewhen=ANYTIME, classes=None,
                        id=None, **html_opts):
         menu_item = MenuItem(
             title, endpoint, priority=priority, activewhen=activewhen,
@@ -73,7 +88,7 @@ class MenuBuilder(object):
                     return True
         return False
 
-    def render(self, menu_id, type='ol'):
+    def render(self, menu_id, type='ul'):
         assert type in ('ul', 'ol')
         builder = getattr(self.builder, type)
         return Markup(builder('\n'.join(self.__render_entries(menu_id))))
@@ -83,11 +98,21 @@ class MenuBuilder(object):
         if menu_id not in self.menus:
             self.add_menu(menu_id)
         if not isinstance(menu_item, MenuItem):
-            raise RuntimeError(
+            if self.app.debug:
+                raise RuntimeError(
+                    "The menu item being added is not a MenuItem",
+                    type(menu_item)
+                )
+            raise RuntimeWarning(
                 "The menu item being added is not a MenuItem", type(menu_item)
             )
         if menu_item.endpoint in self.menus[menu_id]:
-            raise RuntimeError(
+            if self.app.debug:
+                raise RuntimeError(
+                    "There's already a menu entry for the endpoint %r" %
+                    menu_item.endpoint, self.menus[menu_id][menu_item.endpoint]
+                )
+            raise RuntimeWarning(
                 "There's already a menu entry for the endpoint %r" %
                 menu_item.endpoint, self.menus[menu_id][menu_item.endpoint]
             )
@@ -102,9 +127,10 @@ class MenuBuilder(object):
 
 
 class MenuItem(object):
-    def __init__(self, title, endpoint, priority=0, activewhen=NEVER,
-                 visiblewhen=ANYTIME, classes=None, format=None, builder=None,
-                 id=None, li_classes=None, **html_opts):
+    def __init__(self, title, endpoint, priority=0,
+                 activewhen=REQUEST_MATCHES_ENDPOINT, visiblewhen=ANYTIME,
+                 classes=None, li_classes=None, format=None, builder=None,
+                 id=None, **html_opts):
         self.title = title
         self.endpoint = endpoint
         self.priority = priority
@@ -115,6 +141,11 @@ class MenuItem(object):
         elif isinstance(classes, basestring):
             classes = [classes]
         self.classes = classes
+        if li_classes is None:
+            li_classes = []
+        elif isinstance(li_classes, basestring):
+            li_classes = [li_classes]
+        self.li_classes = li_classes
         if format and not builder:
             assert format in ('html', 'xhtml')
             self.builder = getattr(werkzeug.utils, format)
@@ -125,11 +156,6 @@ class MenuItem(object):
         else:
             raise RuntimeError("You can only pass one of \"format\" and \"builder\"")
         self.id = id
-        if li_classes is None:
-            li_classes = []
-        elif isinstance(li_classes, basestring):
-            li_classes = [li_classes]
-        self.li_classes = li_classes
         self.html_opts = html_opts
 
     def render(self):
@@ -140,6 +166,7 @@ class MenuItem(object):
 
         opts = {'href': url_for(self.endpoint)}
         classes, li_classes = self.build_classes()
+
         opts['class_'] = ' '.join(set(classes + self.classes))
         if self.id:
             opts['id'] = self.id
@@ -149,7 +176,6 @@ class MenuItem(object):
             li_opts = {'class_': ' '.join(list(set(self.li_classes + li_classes)))}
         else:
             li_opts = {}
-
         opts.update(self.html_opts)
         return self.builder.li(self.builder.a(self.title, **opts), **li_opts)
 
@@ -167,39 +193,13 @@ class MenuItem(object):
             li_classes.append('active')
         else:
             classes.append('inactive')
-            li_classes.append('active')
+            li_classes.append('inactive')
         return classes, li_classes
 
     def __lt__(self, other):
         if self.priority == other.priority:
             return self.title < other.title
         return self.priority < other.priority
-
-#
-#    def __eq__(self, other):
-#        if self.priority == other.priority:
-#            return not self.title > other.title and not other.title > self.title
-#        return not self.priority < other.priority and not other.priority < self.priority
-#
-#    def __ne__(self, other):
-#        if self.priority == other.priority:
-#            return self.title > other.title or other.title > self.title
-#        return self.priority < other.priority or other.priority < self.priority
-#
-#    def __gt__(self, other):
-#        if self.priority == other.priority:
-#            return self.title > other.title
-#        return other.priority < self.priority
-#
-#    def __ge__(self, other):
-#        if self.priority == other.priority:
-#            return self.title > other.title
-#        return not self.priority < other.priority
-#
-#    def __le__(self, other):
-#        if self.priority == other.priority:
-#            return other.title > self.title
-#        return not other.priority < self.priority
 
     def __unicode__(self):
         return u'<MenuItem title="%(title)s" endpoint="%(endpoint)s" priority=%(priority)s>' % self.__dict__
@@ -246,4 +246,7 @@ class MenuItemContent(MenuItem):
             element = self.builder.span
         if self.id:
             opts['id'] = self.id
-        return self.builder.li(element(self.content, **opts), **li_opts)
+        content = self.content
+        if callable(content):
+            content = content(self)
+        return self.builder.li(element(content, **opts), **li_opts)

@@ -101,12 +101,12 @@ class MenuItemTestCase(unittest.TestCase):
         with app.test_request_context('/'):
             for entry in sorted(menu_entries):
                 output += entry.render() + '\n'
-        self.assertEqual(output, """<a class="inactive" href="/">5</a>
-<a class="inactive" href="/">0</a>
-<a class="inactive" href="/">1</a>
-<a class="inactive" href="/">2</a>
-<a class="inactive" href="/">3</a>
-<a class="inactive" href="/">4</a>
+        self.assertEqual(output, """<li class="active"><a class="active" href="/">5</a></li>
+<li class="active"><a class="active" href="/">0</a></li>
+<li class="active"><a class="active" href="/">1</a></li>
+<li class="active"><a class="active" href="/">2</a></li>
+<li class="active"><a class="active" href="/">3</a></li>
+<li class="active"><a class="active" href="/">4</a></li>
 """)
 
     def test_render_some_active(self):
@@ -126,12 +126,12 @@ class MenuItemTestCase(unittest.TestCase):
         with app.test_request_context('/'):
             for entry in sorted(menu_entries):
                 output += entry.render() + '\n'
-        self.assertEqual(output, """<a class="inactive" href="/">5</a>
-<a class="inactive" href="/">0</a>
-<a class="active" href="/">1</a>
-<a class="inactive" href="/">2</a>
-<a class="active" href="/">3</a>
-<a class="inactive" href="/">4</a>
+        self.assertEqual(output, """<li class="inactive"><a class="inactive" href="/">5</a></li>
+<li class="inactive"><a class="inactive" href="/">0</a></li>
+<li class="active"><a class="active" href="/">1</a></li>
+<li class="inactive"><a class="inactive" href="/">2</a></li>
+<li class="active"><a class="active" href="/">3</a></li>
+<li class="inactive"><a class="inactive" href="/">4</a></li>
 """)
 
 
