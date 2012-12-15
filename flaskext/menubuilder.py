@@ -48,12 +48,12 @@ class MenuBuilder(object):
 
     def add_menu_entry(self, menu_id, title, endpoint, priority=0,
                        activewhen=REQUEST_MATCHES_ENDPOINT,
-                       visiblewhen=ANYTIME, classes=None,
+                       visiblewhen=ANYTIME, classes=None, li_classes=None,
                        id=None, **html_opts):
         menu_item = MenuItem(
             title, endpoint, priority=priority, activewhen=activewhen,
-            visiblewhen=visiblewhen, classes=classes, builder=self.builder,
-            id=id, **html_opts
+            visiblewhen=visiblewhen, classes=classes, li_classes=li_classes,
+            builder=self.builder, id=id, **html_opts
         )
         self.__add_menu_item(menu_id, menu_item)
 
