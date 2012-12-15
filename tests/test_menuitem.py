@@ -9,7 +9,8 @@
 
 import unittest
 from flask import Flask
-from flaskext.menubuilder import MenuItem
+from flask.ext.menubuilder import MenuItem
+
 
 class MenuItemTestCase(unittest.TestCase):
     def test_sorting_by_priority(self):

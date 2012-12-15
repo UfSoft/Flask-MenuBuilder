@@ -17,15 +17,14 @@ def run_tests():
 
 setup(
     name='Flask-MenuBuilder',
-    version='0.9',
+    version='0.9.1',
     url='http://dev.ufsoft.org/projects/menu-builder',
     license='BSD',
     author='Pedro Algarvio',
     author_email='pedro@algarvio.me',
     description='An easy way to create menus to use with flask.',
     long_description=__doc__,
-    packages=['flaskext'],
-    namespace_packages=['flaskext'],
+    py_modules=['flask_menubuilder'],
     zip_safe=False,
     platforms='any',
     install_requires=[

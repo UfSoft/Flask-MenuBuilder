@@ -10,7 +10,7 @@
 import unittest
 import werkzeug.utils
 from flask import Flask, request
-from flaskext.menubuilder import MenuBuilder
+from flask.ext.menubuilder import MenuBuilder
 
 
 class MenuBuilderTestCase(unittest.TestCase):
