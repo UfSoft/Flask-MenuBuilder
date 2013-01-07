@@ -17,7 +17,7 @@ def run_tests():
 
 setup(
     name='Flask-MenuBuilder',
-    version='0.9.1',
+    version='0.9.2',
     url='http://dev.ufsoft.org/projects/menu-builder',
     license='BSD',
     author='Pedro Algarvio',

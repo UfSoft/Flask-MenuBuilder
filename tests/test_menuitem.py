@@ -9,10 +9,13 @@
 
 import unittest
 from flask import Flask
-from flask.ext.menubuilder import MenuItem
+from flask.ext.menubuilder import MenuItem, MenuBuilder
 
 
 class MenuItemTestCase(unittest.TestCase):
+    def setUp(self):
+        self.menubuilder = MenuBuilder()
+
     def test_sorting_by_priority(self):
         menu_entries = []
         for n in range(0, 5):
@@ -93,6 +96,7 @@ class MenuItemTestCase(unittest.TestCase):
             menu_entries.append(MenuItem(n, 'root'))
         menu_entries.append(MenuItem(5, 'root', priority=-1))
         app = Flask(__name__)
+        self.menubuilder.init_app(app)
 
         @app.route('/')
         def root():
@@ -101,6 +105,7 @@ class MenuItemTestCase(unittest.TestCase):
         output = ''
         with app.test_request_context('/'):
             for entry in sorted(menu_entries):
+                entry.builder = app.menubuilder.builder
                 output += entry.render() + '\n'
         self.assertEqual(output, """<li class="active"><a class="active" href="/">5</a></li>
 <li class="active"><a class="active" href="/">0</a></li>
@@ -118,6 +123,7 @@ class MenuItemTestCase(unittest.TestCase):
             menu_entries.append(MenuItem(n, 'root', activewhen=(n%2 and true or false)))
         menu_entries.append(MenuItem(5, 'root', priority=-1, activewhen=(n%2 and true or false)))
         app = Flask(__name__)
+        self.menubuilder.init_app(app)
 
         @app.route('/')
         def root():
@@ -126,6 +132,7 @@ class MenuItemTestCase(unittest.TestCase):
         output = ''
         with app.test_request_context('/'):
             for entry in sorted(menu_entries):
+                entry.builder = app.menubuilder.builder
                 output += entry.render() + '\n'
         self.assertEqual(output, """<li class="inactive"><a class="inactive" href="/">5</a></li>
 <li class="inactive"><a class="inactive" href="/">0</a></li>

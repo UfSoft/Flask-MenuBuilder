@@ -17,6 +17,7 @@ class MenuBuilderTestCase(unittest.TestCase):
     def setUp(self):
         self.app = Flask(__name__)
         self.menubuilder = MenuBuilder(self.app)
+        self.menubuilder.add_menu('main')
         self.menubuilder.add_menu_entry('main', "Root", "root", priority=-1, activewhen=lambda mi: request.path=='/')
         self.menubuilder.add_menu_entry('main', "One", "one", activewhen=lambda mi: request.path=='/one')
         self.menubuilder.add_menu_entry('main', "Two", "two", activewhen=lambda mi: request.path=='/two')
@@ -42,19 +43,11 @@ class MenuBuilderTestCase(unittest.TestCase):
         def visible():
             pass
 
-    def test_render_ol(self):
-        with self.app.test_request_context('/'):
-            output = self.menubuilder.render('main', 'ol')
-            self.assertEqual(str(output), """\
-<ol><li class="active"><a class="active" href="/">Root</a></li>
-<li class="inactive"><a class="inactive" href="/one">One</a></li>
-<li class="inactive"><a class="inactive" href="/two">Two</a></li></ol>""")
-
     def test_render_ul(self):
         with self.app.test_request_context('/'):
-            output = self.menubuilder.render('main', 'ul')
+            output = self.menubuilder.render('main')
             self.assertEqual(str(output), """\
-<ul><li class="active"><a class="active" href="/">Root</a></li>
+<ul class="active"><li class="active"><a class="active" href="/">Root</a></li>
 <li class="inactive"><a class="inactive" href="/one">One</a></li>
 <li class="inactive"><a class="inactive" href="/two">Two</a></li></ul>""")
 
@@ -62,7 +55,7 @@ class MenuBuilderTestCase(unittest.TestCase):
         with self.app.test_request_context('/one'):
             output = self.menubuilder.render('main')
             self.assertEqual(str(output), """\
-<ul><li class="inactive"><a class="inactive" href="/">Root</a></li>
+<ul class="active"><li class="inactive"><a class="inactive" href="/">Root</a></li>
 <li class="active"><a class="active" href="/one">One</a></li>
 <li class="inactive"><a class="inactive" href="/two">Two</a></li></ul>""")
 
@@ -70,7 +63,7 @@ class MenuBuilderTestCase(unittest.TestCase):
         with self.app.test_request_context('/two'):
             output = self.menubuilder.render('main')
             self.assertEqual(str(output), """\
-<ul><li class="inactive"><a class="inactive" href="/">Root</a></li>
+<ul class="active"><li class="inactive"><a class="inactive" href="/">Root</a></li>
 <li class="inactive"><a class="inactive" href="/one">One</a></li>
 <li class="active"><a class="active" href="/two">Two</a></li></ul>""")
 
@@ -78,14 +71,14 @@ class MenuBuilderTestCase(unittest.TestCase):
         with self.app.test_request_context('/two'):
             output = self.menubuilder.render('main')
             self.assertEqual(str(output), """\
-<ul><li class="inactive"><a class="inactive" href="/">Root</a></li>
+<ul class="active"><li class="inactive"><a class="inactive" href="/">Root</a></li>
 <li class="inactive"><a class="inactive" href="/one">One</a></li>
 <li class="active"><a class="active" href="/two">Two</a></li></ul>""")
 
         with self.app.test_request_context('/visible'):
             output = self.menubuilder.render('main')
             self.assertEqual(str(output), """\
-<ul><li class="inactive"><a class="inactive" href="/">Root</a></li>
+<ul class="active"><li class="inactive"><a class="inactive" href="/">Root</a></li>
 <li class="inactive"><a class="inactive" href="/one">One</a></li>
 <li class="inactive"><a class="inactive" href="/two">Two</a></li>
 <li class="active"><a class="active" href="/visible">Visible under /visible only</a></li></ul>""")
@@ -114,21 +107,12 @@ class MenuBuilderTestCase(unittest.TestCase):
                 self.endpoint = 'foo'
         self.assertRaises(RuntimeError, lambda: self.menubuilder.add_menu_item('main', WrongType()))
 
-    def test_render_ol_xhtml(self):
-        self.menubuilder.builder = getattr(werkzeug.utils, 'xhtml')
-        with self.app.test_request_context('/'):
-            output = self.menubuilder.render('main', 'ol')
-            self.assertEqual(str(output), """\
-<ol><li class="active"><a class="active" href="/">Root</a></li>
-<li class="inactive"><a class="inactive" href="/one">One</a></li>
-<li class="inactive"><a class="inactive" href="/two">Two</a></li></ol>""")
-
     def test_render_ul_xhtml(self):
         self.menubuilder.builder = getattr(werkzeug.utils, 'xhtml')
         with self.app.test_request_context('/'):
-            output = self.menubuilder.render('main', 'ul')
+            output = self.menubuilder.render('main')
             self.assertEqual(str(output), """\
-<ul><li class="active"><a class="active" href="/">Root</a></li>
+<ul class="active"><li class="active"><a class="active" href="/">Root</a></li>
 <li class="inactive"><a class="inactive" href="/one">One</a></li>
 <li class="inactive"><a class="inactive" href="/two">Two</a></li></ul>""")
 
