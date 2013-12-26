@@ -219,10 +219,10 @@ class Menu(RenderItem):
             id_=id_,
             **html_opts
         )
-        self.add_menu_item(menu_item)
+        return self.add_menu_item(menu_item)
 
     def add_menu_item(self, menu_item):
-        self.__add_menu_item(menu_item)
+        return self.__add_menu_item(menu_item)
 
     def render(self):
         super(Menu, self).render()
@@ -258,6 +258,7 @@ class Menu(RenderItem):
             )
         menu_item.builder = self.builder
         self.entries[menu_item.endpoint] = menu_item
+        return menu_item
 
 
 class MenuItem(RenderItem):
