@@ -238,21 +238,11 @@ class Menu(RenderItem):
 
     def __add_menu_item(self, menu_item):
         if not isinstance(menu_item, MenuItem):
-            if self.app.debug:
-                raise RuntimeError(
-                    "The menu item being added is not a MenuItem",
-                    type(menu_item)
-                )
-            raise RuntimeWarning(
+            raise RuntimeError(
                 "The menu item being added is not a MenuItem", type(menu_item)
             )
         if menu_item.endpoint in self.entries:
-            if self.app.debug:
-                raise RuntimeError(
-                    "There's already a menu entry for the endpoint %r" %
-                    menu_item.endpoint, self.entries[menu_item.endpoint]
-                )
-            raise RuntimeWarning(
+            raise RuntimeError(
                 "There's already a menu entry for the endpoint %r" %
                 menu_item.endpoint, self.entries[menu_item.endpoint]
             )
